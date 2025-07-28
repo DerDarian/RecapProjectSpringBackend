@@ -1,6 +1,5 @@
-package org.example.recapprojectspring;
+package org.example.recapprojectspring.ToDo;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

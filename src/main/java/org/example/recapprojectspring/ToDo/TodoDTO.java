@@ -1,4 +1,4 @@
-package org.example.recapprojectspring;
+package org.example.recapprojectspring.ToDo;
 
 public record TodoDTO(String id, String description, String status) {
     public TodoDTO(Entry e) {

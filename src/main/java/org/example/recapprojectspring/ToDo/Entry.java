@@ -1,4 +1,4 @@
-package org.example.recapprojectspring;
+package org.example.recapprojectspring.ToDo;
 
 import lombok.With;
 

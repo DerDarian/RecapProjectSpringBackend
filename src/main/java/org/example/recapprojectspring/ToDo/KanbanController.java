@@ -1,7 +1,7 @@
-package org.example.recapprojectspring;
+package org.example.recapprojectspring.ToDo;
 
+import org.example.recapprojectspring.InvalidDTOException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +26,7 @@ public class KanbanController {
     @PostMapping("/todo")
     @ResponseBody
     public ResponseEntity<String> create(@RequestBody TodoDTO dto){
+        validateTodoTDO(dto);
         return new ResponseEntity<>( kanbanService.create(dto).id(), HttpStatus.CREATED);
     }
 
@@ -48,7 +49,7 @@ public class KanbanController {
 
     @PutMapping("/todo/{id}")
     public void update(@PathVariable String id, @RequestBody TodoDTO dto){
-        System.out.println(id);
+        validateTodoTDO(dto);
         kanbanService.update(id, dto);
     }
 
@@ -60,5 +61,28 @@ public class KanbanController {
 
     private List<TodoDTO> convert(List<Entry> entries){
         return entries.stream().map(TodoDTO::new).collect(Collectors.toList());
+    }
+
+    private void validateTodoTDO(TodoDTO dto){
+
+        if(dto == null){
+            throw new InvalidDTOException("TodoDTO dto is null");
+        }
+        String message = "";
+        if(dto.description() == null || dto.description().trim().isEmpty())
+            message = "TodoDTO description is empty\n";
+        if(dto.status() == null){
+            message += "No status is provided\n";
+        }else{
+            try{
+                EntryStatus status = EntryStatus.valueOf(dto.status().toUpperCase());
+            }catch(IllegalArgumentException e){
+                message += "Invalid entry status provided\n";
+                message += "Valid entry status values are: OPEN, IN_PROGRESS, DONE";
+            }
+        }
+        if(!message.isEmpty()){
+            throw new InvalidDTOException(message);
+        }
     }
 }

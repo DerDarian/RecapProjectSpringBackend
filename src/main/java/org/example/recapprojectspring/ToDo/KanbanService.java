@@ -1,5 +1,7 @@
-package org.example.recapprojectspring;
+package org.example.recapprojectspring.ToDo;
 
+import org.example.recapprojectspring.IdService;
+import org.example.recapprojectspring.Spellcheck.ChatGPTService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,13 @@ public class KanbanService {
 
     final EntryRepository entryRepository;
     final IdService idService;
+    final ChatGPTService chatGPTService;
 
-    public KanbanService(EntryRepository entryRepository,  IdService idService) {
+    public KanbanService(EntryRepository entryRepository, IdService idService, ChatGPTService chatGPTService) {
         this.entryRepository = entryRepository;
         this.idService = idService;
         //entryRepository.save(new Entry(idService.generateId(), "Test"));
+        this.chatGPTService = chatGPTService;
     }
 
     public List<Entry> findAll(){
@@ -34,7 +38,8 @@ public class KanbanService {
 
     public Entry create(TodoDTO dto){
         redoStack.clear();
-        Entry e = entryRepository.save(new Entry(idService.generateId(), dto));
+        TodoDTO correctedDTO = new TodoDTO(null, chatGPTService.correctSpelling(dto.description()), dto.status());
+        Entry e = entryRepository.save(new Entry(idService.generateId(), correctedDTO));
         undoStack.push(new Action(e, null));
         return entryRepository.save(e);
     }
@@ -56,9 +61,10 @@ public class KanbanService {
         if(e == null){
             throw new IllegalArgumentException("Entry not found");
         }
-        undoStack.push(new Action(new Entry(id, dto), new Entry(id, e.description(), e.status())));
-        e = e.withDescription(dto.description());
-        e = e.withStatus(EntryStatus.valueOf(dto.status().toUpperCase()));
+        TodoDTO correctedDTO = new  TodoDTO(dto.id(), chatGPTService.correctSpelling(dto.description()), dto.status());
+        undoStack.push(new Action(new Entry(id, correctedDTO), new Entry(id, e.description(), e.status())));
+        e = e.withDescription(correctedDTO.description());
+        e = e.withStatus(EntryStatus.valueOf(correctedDTO.status().toUpperCase()));
         return entryRepository.save(e);
     }
 
